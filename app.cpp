@@ -7,6 +7,7 @@
 #include <problem.hpp>
 #include <random>
 #include <tswap.hpp>
+#include <tswapturns.hpp>
 #include <util.hpp>
 #include <vector>
 
@@ -109,6 +110,8 @@ std::unique_ptr<Solver> getSolver(const std::string solver_name, Problem *P,
     solver = std::make_unique<NaiveTSWAP>(P);
   } else if (solver_name == "TSWAP") {
     solver = std::make_unique<TSWAP>(P);
+  } else if (solver_name == "TSWAPTurns") {
+    solver = std::make_unique<TSWAPTurns>(P);
   } else {
     warn("unknown solver name, " + solver_name + ", continue by TSWAP");
     solver = std::make_unique<TSWAP>(P);
