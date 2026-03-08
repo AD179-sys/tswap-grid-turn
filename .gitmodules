@@ -2,5 +2,5 @@
 	path = third_party/googletest
 	url = https://github.com/google/googletest.git
 [submodule "third_party/grid-pathfinding-turns"]
-	path = grid-pathfinding-turns
+	path = third_party/grid-pathfinding-turns
 	url = https://github.com/AD179-sys/grid-pathfinding-turns.git
