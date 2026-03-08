@@ -197,12 +197,12 @@ void Solver::makeLogSolution(std::ofstream& log)
   log << "starts=";
   for (int i = 0; i < P->getNum(); ++i) {
     Node* v = P->getStart(i);
-    log << "(" << v->pos.x << "," << v->pos.y << "),";
+    log << "(" << v->pos.x << "," << v->pos.y << "," << v->pos.t << "),";
   }
   log << "\ngoals=";
   for (int i = 0; i < P->getNum(); ++i) {
     Node* v = P->getGoal(i);
-    log << "(" << v->pos.x << "," << v->pos.y << "),";
+    log << "(" << v->pos.x << "," << v->pos.y << "," << v->pos.t << "),";
   }
   log << "\n";
   log << "solution=\n";
@@ -210,7 +210,7 @@ void Solver::makeLogSolution(std::ofstream& log)
     log << t << ":";
     auto c = solution.get(t);
     for (auto v : c) {
-      log << "(" << v->pos.x << "," << v->pos.y << "),";
+      log << "(" << v->pos.x << "," << v->pos.y << "," << v->pos.t << "),";
     }
     log << "\n";
   }

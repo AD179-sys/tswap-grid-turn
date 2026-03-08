@@ -89,8 +89,8 @@ Problem::Problem(const std::string& _instance)
              ") does not exist, invalid scenario");
       }
 
-      Node* s = G->getNode(x_s, y_s);
-      Node* g = G->getNode(x_g, y_g);
+      Node* s = G->getNode(x_s, y_s); //invalid
+      Node* g = G->getNode(x_g, y_g); //invalid
       config_s.push_back(s);
       config_g.push_back(g);
     }
@@ -156,7 +156,7 @@ Node* Problem::getGoal(int i) const
   return config_g[i];
 }
 
-void Problem::setRandomStartsGoals(const int flocking_blocks)
+void Problem::setRandomStartsGoals(const int flocking_blocks) // :(
 {
   const int group_num = (flocking_blocks <= 0 || flocking_blocks > num_agents)
                             ? num_agents
@@ -168,8 +168,7 @@ void Problem::setRandomStartsGoals(const int flocking_blocks)
 
   // get grid size
   Grid* grid = reinterpret_cast<Grid*>(G);
-  const int N = grid->getWidth() * grid->getHeight();
-
+  const int N = grid->getWidth() * grid->getHeight() * 2; //
   // set seeds of starts
   std::vector<Node*> seed_starts, seed_goals;
   for (int i = 0; i < group_num; ++i) {
@@ -211,8 +210,8 @@ void Problem::makeScenFile(const std::string& output_file)
   log << "max_timestep=" << max_timestep << "\n";
   log << "max_comp_time=" << max_comp_time << "\n";
   for (int i = 0; i < num_agents; ++i) {
-    log << config_s[i]->pos.x << "," << config_s[i]->pos.y << ","
-        << config_g[i]->pos.x << "," << config_g[i]->pos.y << "\n";
+    log << config_s[i]->pos.x << "," << config_s[i]->pos.y << "," << config_s[i]->pos.t << ","
+        << config_g[i]->pos.x << "," << config_g[i]->pos.y << "," << config_g[i]->pos.t << "\n"; // invalid
   }
   log.close();
 }
