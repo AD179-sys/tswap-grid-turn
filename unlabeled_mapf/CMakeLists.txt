@@ -8,5 +8,5 @@ target_compile_options(${PROJECT_NAME} PUBLIC -O3 -Wall)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_include_directories(${PROJECT_NAME} INTERFACE ./include)
 
-add_subdirectory(../third_party/grid-pathfinding/graph ./graph)
+add_subdirectory(../third_party/grid-pathfinding-turns/graph ./graph)
 target_link_libraries(lib-unlabeled-mapf lib-graph)
