@@ -6,7 +6,7 @@
 #include "../include/util.hpp"
 
 Problem::Problem(const std::string& _instance)
-    : instance(_instance), instance_initialized(true)
+    : instance(_instance), instance_initialized(true) // invalid
 {
   // read instance file
   std::ifstream file(instance);
@@ -156,7 +156,7 @@ Node* Problem::getGoal(int i) const
   return config_g[i];
 }
 
-void Problem::setRandomStartsGoals(const int flocking_blocks) // :(
+void Problem::setRandomStartsGoals(const int flocking_blocks)
 {
   const int group_num = (flocking_blocks <= 0 || flocking_blocks > num_agents)
                             ? num_agents
@@ -168,17 +168,17 @@ void Problem::setRandomStartsGoals(const int flocking_blocks) // :(
 
   // get grid size
   Grid* grid = reinterpret_cast<Grid*>(G);
-  const int N = grid->getWidth() * grid->getHeight() * 2; //
+  const int N = grid->getWidth() * grid->getHeight() * 2;
   // set seeds of starts
   std::vector<Node*> seed_starts, seed_goals;
   for (int i = 0; i < group_num; ++i) {
     Node* s = nullptr;
-    while (s == nullptr || inArray(s, seed_starts)) {
+    while (s == nullptr || inArray(s, seed_starts) || inArray(G->getTwinNode(s->id), seed_starts)) {
       s = G->getNode(getRandomInt(0, N - 1, MT));
     }
     seed_starts.push_back(s);
     Node* g = nullptr;
-    while (g == nullptr || inArray(g, seed_goals)) {
+    while (g == nullptr || inArray(g, seed_goals) || inArray(G->getTwinNode(s->id), seed_goals)) {
       g = G->getNode(getRandomInt(0, N - 1, MT));
     }
     seed_goals.push_back(g);
@@ -186,11 +186,11 @@ void Problem::setRandomStartsGoals(const int flocking_blocks) // :(
 
   int i = 0;
   while (config_s.size() < num_agents) {
-    while (inArray(seed_starts[i], config_s)) {
+    while (inArray(seed_starts[i], config_s) || inArray(G->getTwinNode(seed_starts[i]->id), config_s)) {
       seed_starts[i] = randomChoose(seed_starts[i]->neighbor, MT);
     }
     config_s.push_back(seed_starts[i]);
-    while (inArray(seed_goals[i], config_g)) {
+    while (inArray(seed_goals[i], config_g) || inArray(G->getTwinNode(seed_goals[i]->id), config_g)) {
       seed_goals[i] = randomChoose(seed_goals[i]->neighbor, MT);
     }
     config_g.push_back(seed_goals[i]);
@@ -211,7 +211,7 @@ void Problem::makeScenFile(const std::string& output_file)
   log << "max_comp_time=" << max_comp_time << "\n";
   for (int i = 0; i < num_agents; ++i) {
     log << config_s[i]->pos.x << "," << config_s[i]->pos.y << "," << config_s[i]->pos.t << ","
-        << config_g[i]->pos.x << "," << config_g[i]->pos.y << "," << config_g[i]->pos.t << "\n"; // invalid
+        << config_g[i]->pos.x << "," << config_g[i]->pos.y << "," << config_g[i]->pos.t << "\n"; // different task
   }
   log.close();
 }
