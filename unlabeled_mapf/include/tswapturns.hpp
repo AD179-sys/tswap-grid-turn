@@ -39,7 +39,7 @@ private:
   Node* getNextNode(Node* a, Node* b);
 
   // detect and resolve deadlocks
-  bool deadlockDetectResolve(Agent* a, std::vector<Agent*>& occupied_now);
+  bool deadlockDetectResolve(Agent* a, std::vector<Agent*>& occupied_now, Node* uu);
 
   void run();
 

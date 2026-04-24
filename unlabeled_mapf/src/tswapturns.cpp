@@ -22,6 +22,8 @@ TSWAPTurns::~TSWAPTurns() {}
  * but changes the order of planning agents according to the situation.
  * This modification improves the solution quality of TSWAP.
  */
+
+
 void TSWAPTurns::run()
 {
   Plan plan;  // will be solution
@@ -69,6 +71,18 @@ void TSWAPTurns::run()
     a->g = v;
   };
 
+  auto OccupiedNext = [&](Node* nd_cur0) { // this function need for Turns, because two nodes controls the same node in original graph
+    return (occupied_next[nd_cur0->id] == nullptr ? occupied_next[(nd_cur0->id) ^ 1] : occupied_next[nd_cur0->id]);
+  };
+
+  auto OcupiedNow = [&](Node* nd_cur1) { // the same situation
+    return (occupied_now[nd_cur1->id] == nullptr ? occupied_now[(nd_cur1->id) ^ 1] : occupied_now[nd_cur1->id]);
+  };
+
+  auto CheckOriginalID = [&](Node* nd_cur) {
+    return (nd_cur->id / 2);
+  };
+
   // all agents
   Agent A[P->getNum()];
 
@@ -101,31 +115,57 @@ void TSWAPTurns::run()
 
       // rule 1. stay goal
       if (a_i->v_now == a_i->g) {
+        //std::cerr << "1";
         stay(a_i);
         continue;
       }
 
+      /////////////////////////////////////////////////////////////////////////////////
+      //BEGIN BUILD ZONE
+
       // get desired node
       auto u = getNextNode(a_i->v_now, a_i->g);
-
       // if u is occupied in the *next* timestep -> stay
-      auto a_j = occupied_next[u->id];
+      auto a_j = OccupiedNext(u);
+      
+      if (a_j == a_i) { // It is mean that we turns and we can do this in any time
+        std::cerr << "smth strange\n";
+        moveTo(a_i, u); //rule-n
+        continue;
+      }
+
       if (a_j != nullptr) {
-        if (a_j->v_next == a_j->g) swapGoal(a_i, a_j);  // rule-3
+        //std::cerr << "3";
+        // if the node is the same(in original graph, so id / 2) we need to swap goals
+        if (CheckOriginalID(a_j->v_next) == CheckOriginalID(a_j->g)) swapGoal(a_i, a_j);  // rule-3
         stay(a_i);                                      // rule-5
         continue;
       }
 
       // if u is occupied in the *current* timestep
-      a_j = occupied_now[u->id];
-      if (a_j == nullptr || (a_j->v_now == u && a_j->v_next != nullptr)) {
+      a_j = OcupiedNow(u);
+
+      if (a_j == a_i) { // It is mean that we turns and we can do this in any time 
+        moveTo(a_i, u); //rule-n
+        continue;
+      }
+      if (a_j == nullptr || (a_j->v_next != nullptr && CheckOriginalID(a_j->v_now) != CheckOriginalID(a_j->v_next))) {
+        //std::cerr << "2";
         moveTo(a_i, u);  // rule-2
         continue;
       }
 
       U.push(a_i);
-      if (a_j != nullptr && a_j->v_now == a_j->g) swapGoal(a_i, a_j);  // rule-3
-      deadlockDetectResolve(a_i, occupied_now);                        // rule-4
+      if (a_j != nullptr && a_j->v_now == a_j->g) {
+        swapGoal(a_i, a_j);  // rule-3
+      }
+
+      //std::cerr << "d";
+      //std::cerr << a_i->v_now->id << " " << u->id << "\n";
+      deadlockDetectResolve(a_i, occupied_now, u);                        // rule-4
+
+      //END BUILD ZONE
+      /////////////////////////////////////////////////////////////////////////////////
     }
 
     // acting
@@ -184,14 +224,33 @@ Node* TSWAPTurns::getNextNode(Node* a, Node* b)
   return a;
 }
 
-bool TSWAPTurns::deadlockDetectResolve(Agent* a, std::vector<Agent*>& occupied_now)
+bool TSWAPTurns::deadlockDetectResolve(Agent* a, std::vector<Agent*>& occupied_now, Node* uu) // NEED TO DELETE uu!!!
 {
+
+  /////////////////////////////////////////////////////////////////////////////////
+  //BEGIN BUILD ZONE
   // deadlock detection
+  //std::cerr << "s";
+  auto OcupiedNow = [&](Node* nd_cur2) { // we copy these functions from run function
+    return (occupied_now[nd_cur2->id] == nullptr ? occupied_now[(nd_cur2->id) ^ 1] : occupied_now[nd_cur2->id]);
+  };
+
+  auto CheckOriginalID = [&](Node* nd_cur3) {
+    return (nd_cur3->id / 2);
+  };
+
   std::vector<Agent*> A_p;
   Agent* b = a;
+  bool is_bc_case = false; // DELETE THIS
   while (true) {
-    if (b->v_now == b->g || b->v_next != nullptr) break;  // not deadlock
-    auto c = occupied_now[getNextNode(b->v_now, b->g)->id];
+    if (CheckOriginalID(b->v_now) == CheckOriginalID(b->g) || b->v_next != nullptr) break;  // not deadlock
+    Node* nxt = getNextNode(b->v_now, b->g);
+    auto c = OcupiedNow(nxt);
+    if (b == c) {
+      is_bc_case = true;
+      //std::cerr << nxt->id << " " << b->v_now->id << " " << uu->id << "\n";
+      //std::cerr << "It is impossible case, something went wrong\n\n";
+    }
     if (c == nullptr) break;  // not deadlock
     A_p.push_back(b);
     b = c;
@@ -207,14 +266,27 @@ bool TSWAPTurns::deadlockDetectResolve(Agent* a, std::vector<Agent*>& occupied_n
   }
   if (A_p.size() > 1 && b == a) {  // when detecting deadlock
     // rotate targets
+    /*for (auto itr = A_p.begin(); itr != A_p.end(); ++itr) {
+      std::cerr << (*itr)->id << " ";
+      std::cerr << (*itr)->v_now->id << " ";
+      std::cerr << (*itr)->v_next << " ";
+    }
+    std::cerr << "\n";*/
     Node* g = (*(A_p.end() - 1))->g;
     for (auto itr = A_p.end() - 1; itr != A_p.begin(); --itr)
       (*itr)->g = (*(itr - 1))->g;
     (*A_p.begin())->g = g;
+    //std::cerr << "e1";
+    std::cerr << is_bc_case << "+" << "\n";
     return true;
   }
 
+  std::cerr << is_bc_case << "-" << "\n";
+  //std::cerr << "e2";
   return false;
+
+  //END BUILD ZONE
+  /////////////////////////////////////////////////////////////////////////////////
 }
 
 void TSWAPTurns::setParams(int argc, char* argv[])
