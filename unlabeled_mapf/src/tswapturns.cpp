@@ -277,11 +277,11 @@ bool TSWAPTurns::deadlockDetectResolve(Agent* a, std::vector<Agent*>& occupied_n
       (*itr)->g = (*(itr - 1))->g;
     (*A_p.begin())->g = g;
     //std::cerr << "e1";
-    std::cerr << is_bc_case << "+" << "\n";
+    //std::cerr << is_bc_case << "+" << "\n";
     return true;
   }
 
-  std::cerr << is_bc_case << "-" << "\n";
+  //std::cerr << is_bc_case << "-" << "\n";
   //std::cerr << "e2";
   return false;
 

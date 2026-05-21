@@ -25,7 +25,7 @@ Problem::Problem(const std::string& _instance)
   std::regex r_flocking_blocks = std::regex(R"(flocking_blocks=(\d+))");
   std::regex r_max_timestep = std::regex(R"(max_timestep=(\d+))");
   std::regex r_max_comp_time = std::regex(R"(max_comp_time=(\d+))");
-  std::regex r_sg = std::regex(R"((\d+),(\d+),(\d+),(\d+))");
+  std::regex r_sg = std::regex(R"((\d+),(\d+),(\d+),(\d+),(\d+),(\d+))"); //we need to get 6 numbers 
 
   while (getline(file, line)) {
     // comment
@@ -78,8 +78,10 @@ Problem::Problem(const std::string& _instance)
         config_s.size() < num_agents) {
       int x_s = std::stoi(results[1].str());
       int y_s = std::stoi(results[2].str());
-      int x_g = std::stoi(results[3].str());
-      int y_g = std::stoi(results[4].str());
+      int t_s = std::stoi(results[3].str());
+      int x_g = std::stoi(results[4].str());
+      int y_g = std::stoi(results[5].str());
+      int t_g = std::stoi(results[6].str());
       if (!G->existNode(x_s, y_s)) {
         halt("start node (" + std::to_string(x_s) + ", " + std::to_string(y_s) +
              ") does not exist, invalid scenario");
@@ -88,9 +90,12 @@ Problem::Problem(const std::string& _instance)
         halt("goal node (" + std::to_string(x_g) + ", " + std::to_string(y_g) +
              ") does not exist, invalid scenario");
       }
+      if ((t_s != 0 && t_s != 1) || (t_g != 0 && t_g != 1)) {
+        halt("direction should be a 0(HORIZONTAL) or 1(VERTICAL)");
+      }
 
-      Node* s = G->getNode(x_s, y_s); //invalid
-      Node* g = G->getNode(x_g, y_g); //invalid
+      Node* s = G->getNode(x_s, y_s, t_s); //invalid / fixed?
+      Node* g = G->getNode(x_g, y_g, t_g); //invalid / fixed?
       config_s.push_back(s);
       config_g.push_back(g);
     }
